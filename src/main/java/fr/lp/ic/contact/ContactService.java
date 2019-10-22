@@ -2,10 +2,6 @@ package fr.lp.ic.contact;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.Callable;
-import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import fr.lp.ic.contact.dao.ContactDaoImpl;
 import fr.lp.ic.contact.dao.IContactDao;
@@ -20,25 +16,20 @@ import fr.lp.ic.contact.model.Contact;
  *
  */
 public class ContactService {
-
+	
 	public static final int MIN_NAME_CHARS = 3;
 	public static final int MAX_NAME_CHARS = 40;
+	public static final int MAX_PHONE_NUMBER = 10;
 	// Ne pas bouger
 	private IContactDao contactDao = new ContactDaoImpl();
 
-	private ExecutorService executorService = Executors.newSingleThreadExecutor();
 	/**
 	 * Développer ici la méthode qui retourne une liste de contact, trié par le nom
 	 * 
 	 * @return list des contact triés
 	 */
 	public List<String> listAll() {
-	    try {
-            return executorService.submit(() -> contactDao.
-            })
-
-        }
-
+		return null;
 	}
 
 	/**
@@ -47,7 +38,7 @@ public class ContactService {
 	 * @return nombre de contact
 	 */
 	public int count() {
-		return 0;
+		return listAll().size();
 	}
 
 	/**
@@ -61,21 +52,26 @@ public class ContactService {
 	 * @throws ContactException Le nom doit être unique, si il est déjà existant on
 	 *                          lève une ContactException
 	 */
-	public void newContact(String name, String phoneNumber, String email) throws ContactException{
-
-		if (name == null || name.length() < MIN_NAME_CHARS || name.length() > MAX_NAME_CHARS){
-			throw new IllegalArgumentException("Name should contains 3 chars");
+	public void newContact(String name, String phoneNumber, String email) throws ContactException {
+		
+		if (name==null || name.length() < MIN_NAME_CHARS || name.length() > MAX_NAME_CHARS) {
+			throw new IllegalArgumentException("Name should be a valid name from"+ MIN_NAME_CHARS+" to "+MAX_NAME_CHARS);	
 		}
-
+		
+		if(phoneNumber.length() > MAX_PHONE_NUMBER) {
+			throw new IllegalArgumentException("PhoneNumber should be less than 10");
+		}
+		
 		Optional<Contact> contactFound = contactDao.findByName(name);
-		if (contactFound.isPresent()){
+		if(contactFound.isPresent()) {
 			throw new ContactException();
 		}
 		Contact contact = new Contact();
 		contact.setName(name);
-		contact.setEmail(email);
 		contact.setPhone(phoneNumber);
-		contactDao.save(contact);
+		contact.setEmail(email);
+		contactDao.save(contact);		
+
 	}
 
 	/**
@@ -94,6 +90,27 @@ public class ContactService {
 	 */
 	public void updateContact(String name, String newName, String phoneNumber, String email)
 			throws ContactException, ContactNotFoundException {
+		
+		if (name==null || name.length() < MIN_NAME_CHARS || name.length() > MAX_NAME_CHARS) {
+			throw new IllegalArgumentException("Name should be a valid name from"+ MIN_NAME_CHARS+" to "+MAX_NAME_CHARS);	
+		}
+		
+		if (newName==null || newName.length() < MIN_NAME_CHARS || newName.length() > MAX_NAME_CHARS) {
+			throw new IllegalArgumentException("Name should be a valid name from"+ MIN_NAME_CHARS+" to "+MAX_NAME_CHARS);	
+		}
+		
+		Optional<Contact> contactFound = contactDao.findByName(name);
+		if(!contactFound.isPresent()) {
+			throw new ContactNotFoundException();
+		}
+
+		if(!newName.equalsIgnoreCase(name) && contactDao.findByName(newName).isPresent()) {
+			throw new ContactException();
+		}
+		contactFound.get().setName(newName);
+		contactFound.get().setPhone(phoneNumber);
+		contactFound.get().setEmail(email);
+		contactDao.update(name, contactFound.get());
 
 	}
 
@@ -104,8 +121,24 @@ public class ContactService {
 	 * @throws ContactNotFoundException Si l'utilisateur n'existe pas on lève une
 	 *                                  ContactNotFoundException
 	 */
-	public void deleteContact(String name) throws ContactException {
-
+	public void deleteContact(String name) throws ContactNotFoundException {
+		if(name==null) {
+			throw new IllegalArgumentException("Name should not be null");
+		}
+		/** Call Avant Java 8*/
+		Optional<Contact> ByName = contactDao.findByName(name);
+		if(!ByName.isPresent()) {
+			throw new ContactNotFoundException();
+		}
+		//delete
+		contactDao.delete(name);
+		
+		/**
+		 * Autres méthodes pour lever ContactNotFoundException
+		 * Call Depuis Java 8
+		 *
+		/**contactDao.findByName(name).orElseThrow(ContactNotFoundException::new);*/
+		
 	}
 
 }
