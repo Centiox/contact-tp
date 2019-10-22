@@ -1,0 +1,6 @@
+fr\lp\ic\contact\ContactService.class
+fr\lp\ic\contact\dao\IContactDao.class
+fr\lp\ic\contact\dao\ContactDaoImpl.class
+fr\lp\ic\contact\model\Contact.class
+fr\lp\ic\contact\exception\ContactException.class
+fr\lp\ic\contact\exception\ContactNotFoundException.class
